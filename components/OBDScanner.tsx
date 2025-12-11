@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Vehicle, DTC } from '../types';
 import { geminiService } from '../services/geminiService';
 import { storageService } from '../services/storageService';
-import { AlertOctagon, CheckCircle2, Search, Trash2, Activity, Info, RotateCcw } from 'lucide-react';
+import { AlertOctagon, CheckCircle2, Search, Trash2, Activity, Info, RotateCcw, Play, CheckSquare, Square, XCircle } from 'lucide-react';
 
 interface Props {
   vehicle: Vehicle;
@@ -11,11 +11,14 @@ interface Props {
 export const OBDScanner: React.FC<Props> = ({ vehicle }) => {
   const [code, setCode] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [history, setHistory] = useState<DTC[]>([]);
   const [selectedDTC, setSelectedDTC] = useState<DTC | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadHistory();
+    setSelectedIds(new Set()); // Reset selection on vehicle change
   }, [vehicle.id]);
 
   const loadHistory = () => {
@@ -48,11 +51,82 @@ export const OBDScanner: React.FC<Props> = ({ vehicle }) => {
     setAnalyzing(false);
   };
 
+  const handleSimulateFullScan = async () => {
+    setScanning(true);
+    // Simulate a delay for hardware connection
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Simulation: Find 3 random codes relevant to general vehicles
+    const mockFoundCodes = ['P0300', 'P0171', 'C0035']; 
+    
+    for (const mockCode of mockFoundCodes) {
+      const analysis = await geminiService.interpretDTC(vehicle, mockCode);
+      const newDTC: DTC = {
+        id: crypto.randomUUID(),
+        vehicleId: vehicle.id,
+        code: mockCode,
+        description: analysis.description,
+        aiAnalysis: analysis.analysis,
+        possibleCauses: analysis.possibleCauses,
+        severity: analysis.severity,
+        detectedAt: new Date().toISOString(),
+        status: 'active'
+      };
+      storageService.saveDTC(newDTC);
+    }
+    
+    loadHistory();
+    setScanning(false);
+  };
+
   const handleResolve = (id: string) => {
     storageService.resolveDTC(id);
     loadHistory();
     if (selectedDTC?.id === id) {
       setSelectedDTC(prev => prev ? { ...prev, status: 'resolved' } : null);
+    }
+  };
+
+  // Bulk Actions
+  const toggleSelection = (id: string) => {
+    const newSelection = new Set(selectedIds);
+    if (newSelection.has(id)) {
+      newSelection.delete(id);
+    } else {
+      newSelection.add(id);
+    }
+    setSelectedIds(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === history.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(history.map(d => d.id)));
+    }
+  };
+
+  const handleBulkResolve = () => {
+    selectedIds.forEach(id => {
+      storageService.resolveDTC(id);
+    });
+    loadHistory();
+    setSelectedIds(new Set());
+    if (selectedDTC && selectedIds.has(selectedDTC.id)) {
+      setSelectedDTC(prev => prev ? { ...prev, status: 'resolved' } : null);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (confirm(`Delete ${selectedIds.size} records?`)) {
+      selectedIds.forEach(id => {
+        storageService.deleteDTC(id);
+      });
+      loadHistory();
+      setSelectedIds(new Set());
+      if (selectedDTC && selectedIds.has(selectedDTC.id)) {
+        setSelectedDTC(null);
+      }
     }
   };
 
@@ -68,33 +142,84 @@ export const OBDScanner: React.FC<Props> = ({ vehicle }) => {
               <Activity className="w-5 h-5 text-brand-400" />
               OBD-II Scanner
             </h2>
-            {activeCount > 0 && (
+            {activeCount > 0 && !scanning && (
               <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
                 {activeCount} Active
               </span>
             )}
+            {scanning && (
+              <span className="text-xs text-brand-400 font-mono animate-pulse">Scanning...</span>
+            )}
           </div>
           
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder="Enter Code (e.g. P0300)"
-                className="w-full bg-slate-800 dark:bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-10 py-2 text-sm text-white focus:ring-1 focus:ring-brand-500 outline-none placeholder:text-slate-500"
-                onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-              />
+          <div className="space-y-3">
+             <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  placeholder="Code (e.g. P0300)"
+                  className="w-full bg-slate-800 dark:bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:ring-1 focus:ring-brand-500 outline-none placeholder:text-slate-500"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
+                />
+              </div>
+              <button
+                onClick={handleAnalyze}
+                disabled={analyzing || scanning || !code}
+                className="bg-brand-600 hover:bg-brand-500 text-white px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
+                title="Analyze Single Code"
+              >
+                {analyzing ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+              </button>
             </div>
+            
             <button
-              onClick={handleAnalyze}
-              disabled={analyzing || !code}
-              className="bg-brand-600 hover:bg-brand-500 text-white px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
+              onClick={handleSimulateFullScan}
+              disabled={scanning || analyzing}
+              className="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs py-2 rounded-lg transition-colors border border-slate-600 disabled:opacity-50"
             >
-              {analyzing ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+              {scanning ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              Simulate Full System Scan
             </button>
           </div>
         </div>
+
+        {/* Bulk Actions Bar */}
+        {history.length > 0 && (
+          <div className="px-3 py-2 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <button 
+              onClick={toggleSelectAll}
+              className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1.5 text-xs font-medium"
+            >
+              {selectedIds.size === history.length ? (
+                <CheckSquare className="w-4 h-4" />
+              ) : (
+                <Square className="w-4 h-4" />
+              )}
+              {selectedIds.size > 0 ? `${selectedIds.size} Selected` : 'Select All'}
+            </button>
+
+            {selectedIds.size > 0 && (
+              <div className="flex gap-2">
+                <button 
+                  onClick={handleBulkResolve}
+                  className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded"
+                  title="Mark Selected Resolved"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={handleBulkDelete}
+                  className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+                  title="Delete Selected"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto p-2">
           {history.length === 0 ? (
@@ -107,27 +232,42 @@ export const OBDScanner: React.FC<Props> = ({ vehicle }) => {
               {history.map(dtc => (
                 <div
                   key={dtc.id}
-                  onClick={() => setSelectedDTC(dtc)}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  className={`flex items-start gap-2 p-3 rounded-lg border transition-all ${
                     selectedDTC?.id === dtc.id
                       ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 ring-1 ring-brand-500'
                       : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-300 dark:hover:border-slate-600'
                   }`}
                 >
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{dtc.code}</span>
-                    <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
-                      dtc.status === 'active' 
-                        ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' 
-                        : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-                    }`}>
-                      {dtc.status}
-                    </span>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSelection(dtc.id);
+                    }}
+                    className="mt-1 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 focus:outline-none"
+                  >
+                    {selectedIds.has(dtc.id) ? (
+                      <CheckSquare className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                    ) : (
+                      <Square className="w-4 h-4" />
+                    )}
+                  </button>
+                  
+                  <div className="flex-1 cursor-pointer" onClick={() => setSelectedDTC(dtc)}>
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{dtc.code}</span>
+                      <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
+                        dtc.status === 'active' 
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' 
+                          : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                      }`}>
+                        {dtc.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1">{dtc.description}</p>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      {new Date(dtc.detectedAt).toLocaleDateString()}
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1">{dtc.description}</p>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    {new Date(dtc.detectedAt).toLocaleDateString()}
-                  </p>
                 </div>
               ))}
             </div>
@@ -204,6 +344,15 @@ export const OBDScanner: React.FC<Props> = ({ vehicle }) => {
             <p className="max-w-md text-center mt-2">
               Enter an OBD-II code from your scanner to get detailed AI diagnosis, probable causes, and repair advice tailored to your {vehicle.brand} {vehicle.model}.
             </p>
+            {/* Empty State Prompt for Scan */}
+            <button
+               onClick={handleSimulateFullScan}
+               disabled={scanning}
+               className="mt-6 flex items-center gap-2 px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors font-medium shadow-lg shadow-brand-500/20"
+            >
+              {scanning ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              Start Full System Scan
+            </button>
           </div>
         )}
       </div>

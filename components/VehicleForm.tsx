@@ -22,9 +22,54 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
   const [licensePlate, setLicensePlate] = useState('');
   const [vin, setVin] = useState('');
   const [loadCapacity, setLoadCapacity] = useState('');
+  
+  // Validation State
+  const [vinError, setVinError] = useState('');
+
+  const validateVin = (value: string): boolean => {
+    if (!value) {
+      setVinError('');
+      return true;
+    }
+    const cleanVin = value.toUpperCase();
+
+    // Check for illegal characters
+    if (/[IOQ]/.test(cleanVin)) {
+      setVinError('Standard VINs cannot contain letters I, O, or Q.');
+      return false;
+    }
+
+    // Check for alphanumeric
+    if (!/^[A-Z0-9]+$/.test(cleanVin)) {
+        setVinError('VIN contains invalid characters.');
+        return false;
+    }
+
+    // Check length (Standard is 17)
+    if (cleanVin.length !== 17) {
+      setVinError(`Standard VIN must be 17 characters (current: ${cleanVin.length}).`);
+      return false;
+    }
+
+    setVinError('');
+    return true;
+  };
+
+  const handleVinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toUpperCase();
+    setVin(val);
+    // Real-time validation
+    validateVin(val);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Final check before submit
+    if (!validateVin(vin)) {
+      return;
+    }
+
     const newVehicle: Vehicle = {
       id: crypto.randomUUID(),
       brand,
@@ -61,15 +106,15 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Vehicle Details</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Type</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Body Type</label>
                 <select
                   value={vehicleType}
                   onChange={(e) => setVehicleType(e.target.value as VehicleType)}
                   className="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white border p-2.5 text-sm"
                 >
-                  <option value={VehicleType.CAR}>Car</option>
-                  <option value={VehicleType.VAN}>Van</option>
-                  <option value={VehicleType.TRUCK}>Truck</option>
+                  {Object.values(VehicleType).map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -101,7 +146,7 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Transporter T6"
+                  placeholder="e.g. Corolla, Civic, T6"
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
                   className="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white border p-2.5 text-sm"
@@ -152,9 +197,18 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
                 <input
                   type="text"
                   value={vin}
-                  onChange={(e) => setVin(e.target.value)}
-                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white border p-2.5 text-sm uppercase"
+                  onChange={handleVinChange}
+                  className={`w-full rounded-lg border p-2.5 text-sm uppercase ${
+                    vinError 
+                      ? 'border-red-500 focus:ring-red-500 bg-red-50 dark:bg-red-900/10 dark:border-red-500' 
+                      : 'border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white'
+                  }`}
                 />
+                {vinError && (
+                  <p className="mt-1 text-xs text-red-500 font-medium flex items-center gap-1">
+                    {vinError}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Current Mileage</label>

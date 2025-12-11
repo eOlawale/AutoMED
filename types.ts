@@ -2,6 +2,12 @@ export enum Brand {
   VW = 'Volkswagen',
   HONDA = 'Honda',
   MERCEDES = 'Mercedes-Benz',
+  TOYOTA = 'Toyota',
+  BMW = 'BMW',
+  AUDI = 'Audi',
+  FORD = 'Ford',
+  HYUNDAI = 'Hyundai',
+  NISSAN = 'Nissan',
   OTHER = 'Other'
 }
 
@@ -19,9 +25,15 @@ export enum VehicleStatus {
 }
 
 export enum VehicleType {
-  CAR = 'Car',
+  SEDAN = 'Sedan',
+  SUV = 'SUV',
+  HATCHBACK = 'Hatchback',
+  COUPE = 'Coupe',
+  CONVERTIBLE = 'Convertible',
+  WAGON = 'Wagon',
   VAN = 'Van',
-  TRUCK = 'Truck'
+  TRUCK = 'Truck',
+  MOTORCYCLE = 'Motorcycle'
 }
 
 export interface Vehicle {
@@ -82,3 +94,16 @@ export interface DTC {
 }
 
 export type Theme = 'light' | 'dark';
+
+export interface ColorTheme {
+  name: string;
+  label: string;
+  colors: {
+    50: string;
+    100: string;
+    500: string;
+    600: string;
+    700: string;
+    900: string;
+  }
+}

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0284c7" />
-    <title>AutoMate Pro - Fleet Management</title>
+    <title>AutoMED - Fleet Management</title>
     <link rel="manifest" href="manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -14,21 +14,38 @@
           extend: {
             colors: {
               brand: {
-                50: '#f0f9ff',
-                100: '#e0f2fe',
-                500: '#0ea5e9',
-                600: '#0284c7',
-                700: '#0369a1',
-                900: '#0c4a6e',
+                50: 'rgb(var(--brand-50) / <alpha-value>)',
+                100: 'rgb(var(--brand-100) / <alpha-value>)',
+                500: 'rgb(var(--brand-500) / <alpha-value>)',
+                600: 'rgb(var(--brand-600) / <alpha-value>)',
+                700: 'rgb(var(--brand-700) / <alpha-value>)',
+                900: 'rgb(var(--brand-900) / <alpha-value>)',
               },
               vw: '#1e4063',
               honda: '#cc0000',
-              mercedes: '#333333'
+              mercedes: '#333333',
+              toyota: '#EB0A1E',
+              bmw: '#0066B1',
+              audi: '#BB0A30',
+              ford: '#003478',
+              hyundai: '#002C5F',
+              nissan: '#C3002F'
             }
           }
         }
       }
     </script>
+    <style>
+      :root {
+        /* Default Sky Blue Theme */
+        --brand-50: 240 249 255;
+        --brand-100: 224 242 254;
+        --brand-500: 14 165 233;
+        --brand-600: 2 132 199;
+        --brand-700: 3 105 161;
+        --brand-900: 12 74 110;
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {

@@ -18,7 +18,7 @@ import {
   Activity,
   ClipboardList
 } from 'lucide-react';
-import { SUPPORTED_BRANDS } from './constants';
+import { SUPPORTED_BRANDS, COLOR_THEMES } from './constants';
 
 enum View {
   DASHBOARD = 'Dashboard',
@@ -35,6 +35,7 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [showAddModal, setShowAddModal] = useState(false);
   const [theme, setTheme] = useState<Theme>('light');
+  const [colorTheme, setColorTheme] = useState('blue');
 
   useEffect(() => {
     // Load data
@@ -45,11 +46,17 @@ const App: React.FC = () => {
     }
     
     // Load theme preference
-    const storedTheme = localStorage.getItem('automate_theme') as Theme;
+    const storedTheme = localStorage.getItem('automed_theme') as Theme;
     if (storedTheme) {
       setTheme(storedTheme);
     } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setTheme('dark');
+    }
+
+    // Load color preference
+    const storedColor = localStorage.getItem('automed_color');
+    if (storedColor) {
+      setColorTheme(storedColor);
     }
   }, []);
 
@@ -60,8 +67,23 @@ const App: React.FC = () => {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('automate_theme', theme);
+    localStorage.setItem('automed_theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+     // Apply color variables to root
+     const root = document.documentElement;
+     const selected = COLOR_THEMES.find(c => c.name === colorTheme) || COLOR_THEMES[0];
+     
+     root.style.setProperty('--brand-50', selected.colors[50]);
+     root.style.setProperty('--brand-100', selected.colors[100]);
+     root.style.setProperty('--brand-500', selected.colors[500]);
+     root.style.setProperty('--brand-600', selected.colors[600]);
+     root.style.setProperty('--brand-700', selected.colors[700]);
+     root.style.setProperty('--brand-900', selected.colors[900]);
+
+     localStorage.setItem('automed_color', colorTheme);
+  }, [colorTheme]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -88,7 +110,7 @@ const App: React.FC = () => {
             <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white">
               <Wrench className="w-5 h-5" />
             </div>
-            <span className="text-xl font-bold tracking-tight">AutoMate</span>
+            <span className="text-xl font-bold tracking-tight">AutoMED</span>
           </div>
         </div>
 
@@ -233,13 +255,18 @@ const App: React.FC = () => {
 
         <div className="p-4 md:p-6 max-w-5xl mx-auto">
           {currentView === View.SETTINGS ? (
-            <Settings theme={theme} toggleTheme={toggleTheme} />
+            <Settings 
+              theme={theme} 
+              toggleTheme={toggleTheme} 
+              colorTheme={colorTheme}
+              setColorTheme={setColorTheme}
+            />
           ) : !activeVehicle ? (
             <div className="text-center py-20">
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
                 <Car className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Welcome to AutoMate</h2>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Welcome to AutoMED</h2>
               <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
                 Get started by adding your first vehicle to track maintenance, diagnose issues, and get expert advice.
               </p>

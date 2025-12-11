@@ -1,9 +1,9 @@
 import { Vehicle, ServiceRecord, DTC } from '../types';
 
 const KEYS = {
-  VEHICLES: 'automate_vehicles',
-  RECORDS: 'automate_records',
-  DTCS: 'automate_dtcs',
+  VEHICLES: 'automed_vehicles',
+  RECORDS: 'automed_records',
+  DTCS: 'automed_dtcs',
 };
 
 export const storageService = {
@@ -83,5 +83,11 @@ export const storageService = {
       allDTCs[index].status = 'resolved';
       localStorage.setItem(KEYS.DTCS, JSON.stringify(allDTCs));
     }
+  },
+
+  deleteDTC: (id: string): void => {
+    let allDTCs: DTC[] = JSON.parse(localStorage.getItem(KEYS.DTCS) || '[]');
+    allDTCs = allDTCs.filter(d => d.id !== id);
+    localStorage.setItem(KEYS.DTCS, JSON.stringify(allDTCs));
   }
 };

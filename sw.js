@@ -1,4 +1,4 @@
-const CACHE_NAME = 'automate-pro-v1';
+const CACHE_NAME = 'automed-v1';
 const ASSETS = [
   './',
   './index.html',

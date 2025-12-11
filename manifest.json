@@ -1,6 +1,6 @@
 {
-  "name": "AutoMate Pro Fleet Manager",
-  "short_name": "AutoMate",
+  "name": "AutoMED Fleet Manager",
+  "short_name": "AutoMED",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0f172a",
