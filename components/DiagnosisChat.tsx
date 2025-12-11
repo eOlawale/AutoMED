@@ -86,8 +86,8 @@ export const DiagnosisChat: React.FC<Props> = ({ vehicle }) => {
   };
 
   return (
-    <div className="flex flex-col h-[600px] bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-      <div className="bg-brand-600 p-4 text-white flex items-center gap-2">
+    <div className="flex flex-col h-[600px] bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="bg-brand-600 dark:bg-brand-700 p-4 text-white flex items-center gap-2">
         <Bot className="w-6 h-6" />
         <div>
           <h3 className="font-semibold">AI Diagnostic Technician</h3>
@@ -95,7 +95,7 @@ export const DiagnosisChat: React.FC<Props> = ({ vehicle }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900/50">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -105,11 +105,11 @@ export const DiagnosisChat: React.FC<Props> = ({ vehicle }) => {
               className={`max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed ${
                 msg.role === 'user'
                   ? 'bg-brand-600 text-white rounded-br-none'
-                  : 'bg-white text-slate-800 border border-slate-200 shadow-sm rounded-bl-none'
-              } ${msg.isError ? 'bg-red-50 border-red-200 text-red-800' : ''}`}
+                  : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-600 shadow-sm rounded-bl-none'
+              } ${msg.isError ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' : ''}`}
             >
               {msg.role === 'model' ? (
-                <div className="prose prose-sm prose-slate max-w-none">
+                <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
                   <ReactMarkdown>{msg.text}</ReactMarkdown>
                 </div>
               ) : (
@@ -120,27 +120,27 @@ export const DiagnosisChat: React.FC<Props> = ({ vehicle }) => {
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-none p-4 shadow-sm flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-brand-600" />
-              <span className="text-sm text-slate-500">Analyzing engine data...</span>
+            <div className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl rounded-bl-none p-4 shadow-sm flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-brand-600 dark:text-brand-400" />
+              <span className="text-sm text-slate-500 dark:text-slate-300">Analyzing engine data...</span>
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 bg-white border-t border-slate-100">
+      <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
         {selectedImage && (
-          <div className="mb-2 flex items-center gap-2 text-xs text-brand-600 bg-brand-50 p-2 rounded">
+          <div className="mb-2 flex items-center gap-2 text-xs text-brand-600 dark:text-brand-300 bg-brand-50 dark:bg-brand-900/20 p-2 rounded">
             <Upload className="w-3 h-3" />
             Image attached ready for analysis
-            <button onClick={() => setSelectedImage(null)} className="ml-auto font-bold hover:text-brand-800">×</button>
+            <button onClick={() => setSelectedImage(null)} className="ml-auto font-bold hover:text-brand-800 dark:hover:text-brand-200">×</button>
           </div>
         )}
         <div className="flex gap-2">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="p-3 text-slate-400 hover:text-brand-600 hover:bg-slate-50 rounded-full transition-colors"
+            className="p-3 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-full transition-colors"
             title="Upload photo of issue"
           >
             <Upload className="w-5 h-5" />
@@ -158,12 +158,12 @@ export const DiagnosisChat: React.FC<Props> = ({ vehicle }) => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Describe the sound, leak, or problem..."
-            className="flex-1 bg-slate-100 border-0 rounded-full px-4 focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+            className="flex-1 bg-slate-100 dark:bg-slate-700 border-0 rounded-full px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:bg-white dark:focus:bg-slate-600 transition-all placeholder:text-slate-400"
           />
           <button
             onClick={handleSend}
             disabled={(!input && !selectedImage) || isLoading}
-            className="p-3 bg-brand-600 text-white rounded-full hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md shadow-brand-200"
+            className="p-3 bg-brand-600 text-white rounded-full hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md shadow-brand-200 dark:shadow-none"
           >
             <Send className="w-5 h-5" />
           </button>

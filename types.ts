@@ -12,6 +12,18 @@ export enum FuelType {
   ELECTRIC = 'Electric'
 }
 
+export enum VehicleStatus {
+  ACTIVE = 'Active',
+  MAINTENANCE = 'Maintenance',
+  RETIRED = 'Retired'
+}
+
+export enum VehicleType {
+  CAR = 'Car',
+  VAN = 'Van',
+  TRUCK = 'Truck'
+}
+
 export interface Vehicle {
   id: string;
   name: string;
@@ -19,8 +31,12 @@ export interface Vehicle {
   model: string;
   year: number;
   vin?: string;
+  licensePlate?: string;
   mileage: number;
   fuelType: FuelType;
+  vehicleType: VehicleType;
+  status: VehicleStatus;
+  loadCapacity?: string; // e.g. "1000kg"
   lastServiceDate?: string;
   imageUrl?: string;
 }
@@ -64,3 +80,5 @@ export interface DTC {
   detectedAt: string;
   status: 'active' | 'resolved';
 }
+
+export type Theme = 'light' | 'dark';

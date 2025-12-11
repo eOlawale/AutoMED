@@ -61,8 +61,8 @@ export const OBDScanner: React.FC<Props> = ({ vehicle }) => {
   return (
     <div className="grid md:grid-cols-3 gap-6 h-[calc(100vh-140px)]">
       {/* Left Panel: Scanner Input & List */}
-      <div className="md:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-        <div className="p-4 bg-slate-900 text-white">
+      <div className="md:col-span-1 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden">
+        <div className="p-4 bg-slate-900 dark:bg-slate-950 text-white">
           <div className="flex items-center justify-between mb-4">
              <h2 className="font-bold flex items-center gap-2">
               <Activity className="w-5 h-5 text-brand-400" />
@@ -82,7 +82,7 @@ export const OBDScanner: React.FC<Props> = ({ vehicle }) => {
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 placeholder="Enter Code (e.g. P0300)"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-3 pr-10 py-2 text-sm text-white focus:ring-1 focus:ring-brand-500 outline-none placeholder:text-slate-500"
+                className="w-full bg-slate-800 dark:bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-10 py-2 text-sm text-white focus:ring-1 focus:ring-brand-500 outline-none placeholder:text-slate-500"
                 onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
               />
             </div>
@@ -110,21 +110,21 @@ export const OBDScanner: React.FC<Props> = ({ vehicle }) => {
                   onClick={() => setSelectedDTC(dtc)}
                   className={`p-3 rounded-lg border cursor-pointer transition-all ${
                     selectedDTC?.id === dtc.id
-                      ? 'bg-brand-50 border-brand-500 ring-1 ring-brand-500'
-                      : 'bg-white border-slate-200 hover:border-brand-300'
+                      ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 ring-1 ring-brand-500'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-300 dark:hover:border-slate-600'
                   }`}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <span className="font-mono font-bold text-slate-800">{dtc.code}</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{dtc.code}</span>
                     <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
                       dtc.status === 'active' 
-                        ? 'bg-red-100 text-red-700' 
-                        : 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' 
+                        : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
                     }`}>
                       {dtc.status}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 line-clamp-1">{dtc.description}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1">{dtc.description}</p>
                   <p className="text-[10px] text-slate-400 mt-1">
                     {new Date(dtc.detectedAt).toLocaleDateString()}
                   </p>
@@ -136,32 +136,32 @@ export const OBDScanner: React.FC<Props> = ({ vehicle }) => {
       </div>
 
       {/* Right Panel: Analysis Detail */}
-      <div className="md:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6 overflow-y-auto">
+      <div className="md:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 overflow-y-auto">
         {selectedDTC ? (
           <div className="space-y-6">
-            <header className="flex items-start justify-between border-b border-slate-100 pb-4">
+            <header className="flex items-start justify-between border-b border-slate-100 dark:border-slate-700 pb-4">
               <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <h1 className="text-3xl font-bold text-slate-900 font-mono">{selectedDTC.code}</h1>
+                  <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-mono">{selectedDTC.code}</h1>
                   {selectedDTC.severity === 'critical' && <span className="bg-red-600 text-white text-xs px-2 py-1 rounded uppercase font-bold">Critical</span>}
                   {selectedDTC.severity === 'high' && <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded uppercase font-bold">High Severity</span>}
                   {selectedDTC.severity === 'medium' && <span className="bg-amber-500 text-white text-xs px-2 py-1 rounded uppercase font-bold">Medium</span>}
                   {selectedDTC.severity === 'low' && <span className="bg-slate-500 text-white text-xs px-2 py-1 rounded uppercase font-bold">Low</span>}
                 </div>
-                <p className="text-lg text-slate-700">{selectedDTC.description}</p>
+                <p className="text-lg text-slate-700 dark:text-slate-300">{selectedDTC.description}</p>
               </div>
               
               <div className="flex gap-2">
                 {selectedDTC.status === 'active' ? (
                   <button
                     onClick={() => handleResolve(selectedDTC.id)}
-                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 hover:border-emerald-300 transition-colors"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Mark Resolved</span>
                   </button>
                 ) : (
-                  <span className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg font-medium">
+                  <span className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg font-medium">
                     <CheckCircle2 className="w-4 h-4" />
                     Resolved
                   </span>
@@ -169,20 +169,20 @@ export const OBDScanner: React.FC<Props> = ({ vehicle }) => {
               </div>
             </header>
 
-            <div className="prose prose-slate max-w-none">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">AI Expert Analysis</h3>
-                <p className="text-slate-800 whitespace-pre-line">{selectedDTC.aiAnalysis}</p>
+            <div className="prose prose-slate dark:prose-invert max-w-none">
+              <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">AI Expert Analysis</h3>
+                <p className="text-slate-800 dark:text-slate-200 whitespace-pre-line">{selectedDTC.aiAnalysis}</p>
               </div>
 
               {selectedDTC.possibleCauses && selectedDTC.possibleCauses.length > 0 && (
                 <div className="mt-6">
-                  <h3 className="font-semibold text-slate-900 mb-3">Possible Causes</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-3">Possible Causes</h3>
                   <ul className="space-y-2">
                     {selectedDTC.possibleCauses.map((cause, idx) => (
                       <li key={idx} className="flex items-start gap-2">
                         <AlertOctagon className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-slate-700">{cause}</span>
+                        <span className="text-slate-700 dark:text-slate-300">{cause}</span>
                       </li>
                     ))}
                   </ul>
@@ -190,17 +190,17 @@ export const OBDScanner: React.FC<Props> = ({ vehicle }) => {
               )}
             </div>
             
-            <div className="bg-brand-50 p-4 rounded-xl border border-brand-100 mt-8">
-              <h4 className="font-semibold text-brand-800 mb-1">Diagnosis Tip</h4>
-              <p className="text-sm text-brand-700">
+            <div className="bg-brand-50 dark:bg-brand-900/20 p-4 rounded-xl border border-brand-100 dark:border-brand-800 mt-8">
+              <h4 className="font-semibold text-brand-800 dark:text-brand-300 mb-1">Diagnosis Tip</h4>
+              <p className="text-sm text-brand-700 dark:text-brand-200">
                 For {vehicle.brand} vehicles, this code often triggers due to sensor fouling before actual failure. Check wiring harnesses first.
               </p>
             </div>
           </div>
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-slate-400">
-            <Activity className="w-16 h-16 mb-4 text-slate-200" />
-            <h3 className="text-lg font-medium text-slate-600">Ready to Scan</h3>
+            <Activity className="w-16 h-16 mb-4 text-slate-200 dark:text-slate-700" />
+            <h3 className="text-lg font-medium text-slate-600 dark:text-slate-400">Ready to Scan</h3>
             <p className="max-w-md text-center mt-2">
               Enter an OBD-II code from your scanner to get detailed AI diagnosis, probable causes, and repair advice tailored to your {vehicle.brand} {vehicle.model}.
             </p>
