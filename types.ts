@@ -36,6 +36,15 @@ export enum VehicleType {
   MOTORCYCLE = 'Motorcycle'
 }
 
+export enum View {
+  DASHBOARD = 'Dashboard',
+  DIAGNOSIS = 'AI Mechanic',
+  OBD = 'OBD-II Scanner',
+  MAINTENANCE = 'Maintenance Log',
+  GUIDES = 'DIY Guides',
+  SETTINGS = 'Settings'
+}
+
 export interface Vehicle {
   id: string;
   name: string;

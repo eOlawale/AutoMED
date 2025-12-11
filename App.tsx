@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Vehicle, Theme } from './types';
+import { Vehicle, Theme, View } from './types';
 import { storageService } from './services/storageService';
 import { VehicleForm } from './components/VehicleForm';
 import { Dashboard } from './components/Dashboard';
@@ -20,19 +20,14 @@ import {
 } from 'lucide-react';
 import { SUPPORTED_BRANDS, COLOR_THEMES } from './constants';
 
-enum View {
-  DASHBOARD = 'Dashboard',
-  DIAGNOSIS = 'AI Mechanic',
-  OBD = 'OBD-II Scanner',
-  MAINTENANCE = 'Maintenance Log',
-  GUIDES = 'DIY Guides',
-  SETTINGS = 'Settings'
-}
-
 const App: React.FC = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  
+  // State for current view and default view preference
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
+  const [defaultView, setDefaultView] = useState<View>(View.DASHBOARD);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [theme, setTheme] = useState<Theme>('light');
   const [colorTheme, setColorTheme] = useState('blue');
@@ -57,6 +52,13 @@ const App: React.FC = () => {
     const storedColor = localStorage.getItem('automed_color');
     if (storedColor) {
       setColorTheme(storedColor);
+    }
+
+    // Load default view preference
+    const storedDefaultView = localStorage.getItem('automed_default_view') as View;
+    if (storedDefaultView && Object.values(View).includes(storedDefaultView)) {
+      setDefaultView(storedDefaultView);
+      setCurrentView(storedDefaultView); // Set initial view to default
     }
   }, []);
 
@@ -87,6 +89,11 @@ const App: React.FC = () => {
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  const handleSetDefaultView = (view: View) => {
+    setDefaultView(view);
+    localStorage.setItem('automed_default_view', view);
   };
 
   const handleSaveVehicle = (v: Vehicle) => {
@@ -260,6 +267,8 @@ const App: React.FC = () => {
               toggleTheme={toggleTheme} 
               colorTheme={colorTheme}
               setColorTheme={setColorTheme}
+              defaultView={defaultView}
+              setDefaultView={handleSetDefaultView}
             />
           ) : !activeVehicle ? (
             <div className="text-center py-20">

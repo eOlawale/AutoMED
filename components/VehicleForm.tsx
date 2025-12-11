@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Brand, FuelType, Vehicle, VehicleStatus, VehicleType } from '../types';
 import { SUPPORTED_BRANDS, FUEL_TYPES } from '../constants';
-import { Car, Check, X, Truck, Info } from 'lucide-react';
+import { Car, Check, X, Truck, Info, Search, FileText, Loader2, Download } from 'lucide-react';
+import { vinService, VINInfo } from '../services/vinService';
+import { geminiService } from '../services/geminiService';
+import ReactMarkdown from 'react-markdown';
 
 interface Props {
   onSave: (vehicle: Vehicle) => void;
@@ -23,8 +26,11 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
   const [vin, setVin] = useState('');
   const [loadCapacity, setLoadCapacity] = useState('');
   
-  // Validation State
+  // Validation & Decoding State
   const [vinError, setVinError] = useState('');
+  const [decodedInfo, setDecodedInfo] = useState<VINInfo | null>(null);
+  const [vinHistory, setVinHistory] = useState<string | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const validateVin = (value: string): boolean => {
     if (!value) {
@@ -58,15 +64,43 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
   const handleVinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toUpperCase();
     setVin(val);
-    // Real-time validation
-    validateVin(val);
+    if (validateVin(val)) {
+       // Clear previous decode if user changes valid VIN
+       if (decodedInfo && decodedInfo.wmi + decodedInfo.vds + decodedInfo.vis !== val) {
+         setDecodedInfo(null);
+         setVinHistory(null);
+       }
+    }
+  };
+
+  const handleDecodeVin = () => {
+    if (!validateVin(vin)) return;
+    
+    const info = vinService.decode(vin);
+    setDecodedInfo(info);
+    
+    // Auto-fill available info
+    if (info.brandEnum) {
+      setBrand(info.brandEnum);
+    }
+    if (info.year) {
+      setYear(info.year);
+    }
+  };
+
+  const handleFindHistory = async () => {
+    if (!decodedInfo) return;
+    setLoadingHistory(true);
+    const report = await geminiService.getVINInsights(vin, decodedInfo);
+    setVinHistory(report);
+    setLoadingHistory(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Final check before submit
-    if (!validateVin(vin)) {
+    if (vin && !validateVin(vin)) {
       return;
     }
 
@@ -101,6 +135,88 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* VIN Decoder Section */}
+          <section className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-200">VIN (Vehicle Identification Number)</label>
+              <div className="flex gap-2">
+                {decodedInfo && !vinHistory && (
+                  <button
+                    type="button"
+                    onClick={handleFindHistory}
+                    disabled={loadingHistory}
+                    className="text-xs flex items-center gap-1 text-brand-600 dark:text-brand-400 hover:underline"
+                  >
+                    {loadingHistory ? <Loader2 className="w-3 h-3 animate-spin"/> : <Search className="w-3 h-3"/>}
+                    Find History
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex gap-2 mb-2">
+               <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={vin}
+                  onChange={handleVinChange}
+                  placeholder="Enter 17-digit VIN"
+                  className={`w-full rounded-lg border p-2.5 text-sm uppercase font-mono tracking-wider ${
+                    vinError 
+                      ? 'border-red-500 focus:ring-red-500 bg-red-50 dark:bg-red-900/10 dark:border-red-500' 
+                      : 'border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white'
+                  }`}
+                />
+               </div>
+               <button
+                 type="button"
+                 onClick={handleDecodeVin}
+                 disabled={!vin || vin.length !== 17 || !!vinError}
+                 className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 text-sm font-medium transition-colors disabled:opacity-50"
+               >
+                 Decode
+               </button>
+            </div>
+            {vinError && (
+              <p className="text-xs text-red-500 font-medium flex items-center gap-1 mb-2">
+                {vinError}
+              </p>
+            )}
+
+            {decodedInfo && (
+              <div className="mt-4 grid grid-cols-2 gap-4 text-sm animate-in fade-in slide-in-from-top-2">
+                 <div className="p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-600">
+                   <span className="text-xs text-slate-400 block uppercase">Manufacturer</span>
+                   <span className="font-medium text-slate-800 dark:text-white">{decodedInfo.manufacturer}</span>
+                 </div>
+                 <div className="p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-600">
+                   <span className="text-xs text-slate-400 block uppercase">Origin</span>
+                   <span className="font-medium text-slate-800 dark:text-white">{decodedInfo.country} ({decodedInfo.region})</span>
+                 </div>
+                 <div className="p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-600">
+                   <span className="text-xs text-slate-400 block uppercase">Model Year</span>
+                   <span className="font-medium text-slate-800 dark:text-white">{decodedInfo.year || 'Unknown'}</span>
+                 </div>
+                 <div className="p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-600">
+                   <span className="text-xs text-slate-400 block uppercase">Descriptor (VDS)</span>
+                   <span className="font-medium text-slate-800 dark:text-white font-mono">{decodedInfo.vds}</span>
+                 </div>
+              </div>
+            )}
+            
+            {vinHistory && (
+              <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-brand-200 dark:border-brand-900 animate-in fade-in">
+                 <h4 className="font-bold text-brand-700 dark:text-brand-400 flex items-center gap-2 mb-2">
+                   <FileText className="w-4 h-4" />
+                   Vehicle History & Specs Report
+                 </h4>
+                 <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
+                    <ReactMarkdown>{vinHistory}</ReactMarkdown>
+                 </div>
+              </div>
+            )}
+          </section>
+
           {/* Basic Info */}
           <section>
             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Vehicle Details</h3>
@@ -180,7 +296,7 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
 
           {/* Fleet Specifics */}
           <section>
-             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Fleet Documentation</h3>
+             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Additional Info</h3>
              <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">License Plate</label>
@@ -193,24 +309,6 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">VIN (Optional)</label>
-                <input
-                  type="text"
-                  value={vin}
-                  onChange={handleVinChange}
-                  className={`w-full rounded-lg border p-2.5 text-sm uppercase ${
-                    vinError 
-                      ? 'border-red-500 focus:ring-red-500 bg-red-50 dark:bg-red-900/10 dark:border-red-500' 
-                      : 'border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white'
-                  }`}
-                />
-                {vinError && (
-                  <p className="mt-1 text-xs text-red-500 font-medium flex items-center gap-1">
-                    {vinError}
-                  </p>
-                )}
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Current Mileage</label>
                 <input
                   type="number"
@@ -221,7 +319,7 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
                 />
               </div>
                <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Load Capacity / Payload</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Load Capacity</label>
                 <input
                   type="text"
                   value={loadCapacity}
@@ -230,19 +328,18 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
                   className="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white border p-2.5 text-sm"
                 />
               </div>
+               <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nickname</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Blue Van"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white border p-2.5 text-sm"
+                />
+              </div>
              </div>
           </section>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nickname (Optional)</label>
-            <input
-              type="text"
-              placeholder="e.g. Delivery Van 1"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white border p-2.5 text-sm"
-            />
-          </div>
 
           <div className="pt-4 flex gap-3">
             <button
@@ -257,7 +354,7 @@ export const VehicleForm: React.FC<Props> = ({ onSave, onCancel }) => {
               className="flex-1 px-4 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-medium flex items-center justify-center gap-2"
             >
               <Check className="w-4 h-4" />
-              Add Vehicle
+              Save Vehicle
             </button>
           </div>
         </form>

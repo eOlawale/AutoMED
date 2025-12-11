@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { Theme } from '../types';
-import { Moon, Sun, Download, Upload, Trash2, Smartphone, Palette, Check } from 'lucide-react';
+import { Theme, View } from '../types';
+import { Moon, Sun, Download, Upload, Trash2, Smartphone, Palette, Check, Save, Layout } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { COLOR_THEMES } from '../constants';
 
@@ -9,9 +9,18 @@ interface Props {
   toggleTheme: () => void;
   colorTheme: string;
   setColorTheme: (name: string) => void;
+  defaultView: View;
+  setDefaultView: (view: View) => void;
 }
 
-export const Settings: React.FC<Props> = ({ theme, toggleTheme, colorTheme, setColorTheme }) => {
+export const Settings: React.FC<Props> = ({ 
+  theme, 
+  toggleTheme, 
+  colorTheme, 
+  setColorTheme,
+  defaultView,
+  setDefaultView
+}) => {
   
   const handleExport = () => {
     const data = {
@@ -79,24 +88,52 @@ export const Settings: React.FC<Props> = ({ theme, toggleTheme, colorTheme, setC
         </div>
       </div>
 
+      {/* General Preferences */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">General Preferences</h2>
+         
+         <div className="flex items-center justify-between">
+           <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                 <Layout className="w-4 h-4 text-slate-400" />
+                 <h3 className="font-medium text-slate-800 dark:text-slate-200">Startup Screen</h3>
+              </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Choose which screen loads when you open the app.</p>
+           </div>
+           
+           <select
+             value={defaultView}
+             onChange={(e) => setDefaultView(e.target.value as View)}
+             className="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-brand-500"
+           >
+             {Object.values(View).filter(v => v !== View.SETTINGS).map((v) => (
+               <option key={v} value={v}>{v}</option>
+             ))}
+           </select>
+         </div>
+      </div>
+
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Data Management</h2>
         
         <div className="space-y-4">
           <button 
             onClick={handleExport}
-            className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            className="w-full flex items-center justify-between p-4 bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800 rounded-lg hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <Download className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+              <div className="p-2 bg-brand-600 rounded-full text-white group-hover:scale-110 transition-transform">
+                <Save className="w-5 h-5" />
+              </div>
               <div className="text-left">
-                <p className="font-medium text-slate-900 dark:text-white">Export Data</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Download a JSON backup of your fleet</p>
+                <p className="font-bold text-brand-800 dark:text-brand-300">Save Backup to File</p>
+                <p className="text-xs text-brand-600 dark:text-brand-400">Export all your vehicle data and history to a JSON file.</p>
               </div>
             </div>
+            <Download className="w-5 h-5 text-brand-500" />
           </button>
           
-           <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg opacity-50 cursor-not-allowed">
+           <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg opacity-50 cursor-not-allowed border border-transparent">
             <div className="flex items-center gap-3">
               <Upload className="w-5 h-5 text-slate-400" />
               <div className="text-left">
@@ -108,12 +145,12 @@ export const Settings: React.FC<Props> = ({ theme, toggleTheme, colorTheme, setC
         </div>
       </div>
       
-      <div className="bg-gradient-to-br from-brand-600 to-brand-800 rounded-xl shadow-lg p-6 text-white">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-lg p-6 text-white">
         <div className="flex items-center gap-3 mb-2">
-          <Smartphone className="w-6 h-6" />
+          <Smartphone className="w-6 h-6 text-brand-400" />
           <h2 className="text-xl font-bold">Install App</h2>
         </div>
-        <p className="text-brand-100 mb-4 text-sm">
+        <p className="text-slate-300 mb-4 text-sm">
           Add AutoMED to your home screen for quick access and offline capabilities.
           Tap "Share" then "Add to Home Screen" in your browser menu.
         </p>

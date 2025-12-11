@@ -156,5 +156,38 @@ export const geminiService = {
         severity: "low"
       };
     }
+  },
+
+  /**
+   * Generates insights based on VIN and decoded info
+   */
+  getVINInsights: async (vin: string, decodedInfo: any): Promise<string> => {
+    try {
+      const prompt = `
+        I have a VIN: ${vin}.
+        Basic Decoded Info: ${JSON.stringify(decodedInfo)}.
+        
+        Please provide a 'Vehicle History & Specs Report' based on the manufacturer specifications for this VIN pattern.
+        Include:
+        1. Likely Engine / Transmission options for this configuration.
+        2. Assembly plant location facts.
+        3. Common recalls or known issues for this specific generation/year.
+        4. Fun fact about this specific model.
+        
+        Disclaimer: State that this is AI-generated based on the VIN pattern and not an official DMV/Carfax record.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+        }
+      });
+
+      return response.text || "Could not generate VIN insights.";
+    } catch (e) {
+      return "Unable to retrieve VIN insights at this time.";
+    }
   }
 };
